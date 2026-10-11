@@ -194,13 +194,19 @@ const fr = {
     ctaText: "Discutons de votre contexte et de la meilleure approche.",
     diagramLabel: "Schéma d'architecture",
   },
+  aboutTeaser: {
+    eyebrow: "À propos",
+    title: "Un développeur qui pense produit.",
+    cta: "Lire mon parcours",
+  },
   about: {
+    portraitAlt: "Portrait de Riche Makso, en costume noir, regard face caméra.",
     eyebrow: "À propos",
     title: "Développeur Full-Stack, en route vers le DevOps.",
     blocks: [
       {
         title: "Profil",
-        text: "Je suis développeur Full-Stack et Junior DevOps chez ELITE NETWORK, entrepreneur tech basé à Brazzaville. Je construis des applications web et mobiles avec React, Next.js, NestJS, Node.js et Laravel, du modèle de données jusqu'à l'interface, et je conçois des produits pour des problèmes concrets.",
+        text: "Je suis développeur Full-Stack et Junior DevOps chez ELITE NETWORK, entrepreneur tech basé à Brazzaville. Je construis des applications web et mobiles avec React, Next.js, NestJS et Node.js, du modèle de données jusqu'à l'interface, et je conçois des produits pour des problèmes concrets.",
       },
       {
         title: "Vers le DevOps",

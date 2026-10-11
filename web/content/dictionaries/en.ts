@@ -194,13 +194,19 @@ const en: Dictionary = {
     ctaText: "Let's discuss your context and the best approach.",
     diagramLabel: "Architecture diagram",
   },
+  aboutTeaser: {
+    eyebrow: "About",
+    title: "A developer who thinks in products.",
+    cta: "Read my background",
+  },
   about: {
+    portraitAlt: "Portrait of Riche Makso in a black suit, looking at the camera.",
     eyebrow: "About",
     title: "Full-Stack developer, heading towards DevOps.",
     blocks: [
       {
         title: "Profile",
-        text: "I'm a Full-Stack developer and Junior DevOps at ELITE NETWORK, and a tech entrepreneur based in Brazzaville. I build web and mobile applications with React, Next.js, NestJS, Node.js and Laravel, from the data model to the interface, and I design products for concrete problems.",
+        text: "I'm a Full-Stack developer and Junior DevOps at ELITE NETWORK, and a tech entrepreneur based in Brazzaville. I build web and mobile applications with React, Next.js, NestJS and Node.js, from the data model to the interface, and I design products for concrete problems.",
       },
       {
         title: "Towards DevOps",

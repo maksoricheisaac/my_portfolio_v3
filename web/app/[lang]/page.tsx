@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { AboutTeaser } from "@/components/sections/about-teaser";
 import { Approach } from "@/components/sections/approach";
 import { ContactCta } from "@/components/sections/contact-cta";
 import { Expertise } from "@/components/sections/expertise";
@@ -40,6 +41,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
     url: `${site.url}/${lang}`,
     jobTitle: lang === "fr" ? "Développeur Full-Stack & Junior DevOps" : "Full-Stack Developer & Junior DevOps",
     address: { "@type": "PostalAddress", addressLocality: "Brazzaville", addressCountry: "CG" },
+    image: `${site.url}/me/portrait-crossed.webp`,
     sameAs: [site.linkedin, site.github].filter(Boolean),
   };
 
@@ -51,6 +53,7 @@ export default async function HomePage({ params }: PageProps<"/[lang]">) {
       />
       <Hero lang={lang} dict={dict} />
       <Expertise lang={lang} dict={dict} />
+      <AboutTeaser lang={lang} dict={dict} />
       <FeaturedProjects lang={lang} dict={dict} />
       <Approach dict={dict} />
       <Stack lang={lang} dict={dict} />

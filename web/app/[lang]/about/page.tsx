@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ContactCta } from "@/components/sections/contact-cta";
 import { Reveal } from "@/components/motion/reveal";
+import { Portrait } from "@/components/site/portrait";
 import { Container, PageHeader } from "@/components/site/section";
 import { getDictionary } from "@/content/dictionaries";
 import { hasLocale } from "@/lib/i18n";
@@ -25,7 +26,14 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
   return (
     <>
       <Container className="py-20 sm:py-28">
-        <PageHeader eyebrow={d.eyebrow} title={d.title} />
+        <div className="grid items-end gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <PageHeader eyebrow={d.eyebrow} title={d.title} />
+          </div>
+          <Reveal delay={0.2} className="lg:col-span-4 lg:col-start-9">
+            <Portrait photo="crossed" alt={d.portraitAlt} priority className="mx-auto max-w-sm" />
+          </Reveal>
+        </div>
 
         <div className="mt-20 grid gap-16 lg:grid-cols-12">
           <div className="space-y-12 lg:col-span-7">

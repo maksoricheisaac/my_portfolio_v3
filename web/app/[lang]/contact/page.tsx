@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { ContactForm } from "@/components/site/contact-form";
+import { Portrait } from "@/components/site/portrait";
 import { Container, PageHeader } from "@/components/site/section";
 import { CopyButton } from "@/components/site/copy-button";
 import { getDictionary } from "@/content/dictionaries";
@@ -42,6 +43,11 @@ export default async function ContactPage({
           <ContactForm lang={lang} form={d.form} />
         </Reveal>
       <Reveal as="section" delay={0.1} className="lg:col-span-5" aria-labelledby="channels">
+        <Portrait
+          photo="jacket"
+          alt={dict.about.portraitAlt}
+          className="mb-10 max-w-[14rem]"
+        />
         <h2 id="channels" className="eyebrow">
           {d.channels}
         </h2>

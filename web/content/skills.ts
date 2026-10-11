@@ -98,14 +98,6 @@ export const skillGroups: SkillGroup[] = [
         },
       },
       {
-        name: "PHP / Laravel",
-        level: "practice",
-        usedFor: {
-          fr: "Applications web back-office et API en PHP.",
-          en: "Back-office web applications and PHP APIs.",
-        },
-      },
-      {
         name: "FastAPI",
         level: "practice",
         usedFor: {
