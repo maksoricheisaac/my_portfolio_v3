@@ -56,10 +56,6 @@ const fr = {
       "Développement Full-Stack et DevOps : de l'architecture applicative à l'automatisation des déploiements.",
     ctaProjects: "Voir les projets",
     ctaContact: "Démarrer une discussion",
-    scene:
-      "Représentation abstraite d'un système distribué : des services reliés entre eux.",
-    labelBuild: "Build",
-    labelRun: "Run",
   },
   expertise: {
     eyebrow: "Deux expertises, un même produit",

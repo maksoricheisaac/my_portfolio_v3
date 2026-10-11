@@ -2,25 +2,15 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/components/site/section";
-import { Portrait } from "@/components/site/portrait";
 import type { Dictionary } from "@/content/dictionaries";
 import { href, type Locale } from "@/lib/i18n";
-import { site } from "@/lib/site";
 
 export function AboutTeaser({ lang, dict }: { lang: Locale; dict: Dictionary }) {
   const d = dict.aboutTeaser;
   return (
     <section className="border-t border-border py-24 sm:py-32">
-      <Container className="grid items-center gap-12 lg:grid-cols-12">
-        <Reveal className="lg:col-span-4">
-          <Portrait
-            photo="pockets"
-            alt={dict.about.portraitAlt}
-            caption={site.location}
-            className="mx-auto max-w-sm"
-          />
-        </Reveal>
-        <Reveal delay={0.1} className="lg:col-span-7 lg:col-start-6">
+      <Container>
+        <Reveal delay={0.1} className="max-w-3xl">
           <p className="eyebrow">
             <span className="text-signal">/</span> {d.eyebrow}
           </p>

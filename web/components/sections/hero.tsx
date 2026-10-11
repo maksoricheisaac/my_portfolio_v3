@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Reveal, WordReveal } from "@/components/motion/reveal";
 import { Container } from "@/components/site/section";
-import { HeroScene } from "@/components/three/hero-scene";
+import { Portrait } from "@/components/site/portrait";
 import type { Dictionary } from "@/content/dictionaries";
 import { href, t, type Locale } from "@/lib/i18n";
 import { site } from "@/lib/site";
@@ -24,7 +24,7 @@ export function Hero({ lang, dict }: { lang: Locale; dict: Dictionary }) {
           <Reveal y={12} delay={0.05}>
             <p className="eyebrow">{dict.hero.eyebrow}</p>
           </Reveal>
-          <h1 className="font-display mt-5 text-balance text-[clamp(2.5rem,6.2vw,5.5rem)] font-semibold leading-[0.98]">
+          <h1 className="font-display mt-5 text-balance text-[clamp(2.5rem,5vw,4.5rem)] font-semibold leading-[0.98]">
             <WordReveal text={dict.hero.title} delay={0.15} />
           </h1>
           <Reveal delay={0.7} className="mt-7 max-w-xl text-pretty text-lg text-muted-foreground sm:text-xl">
@@ -47,15 +47,15 @@ export function Hero({ lang, dict }: { lang: Locale; dict: Dictionary }) {
           </Reveal>
         </div>
 
-        <div className="relative mx-auto aspect-square w-full max-w-md lg:col-span-5 lg:max-w-none">
-          <HeroScene label={dict.hero.scene} className="size-full" />
-          <span className="font-mono absolute left-0 top-[12%] text-xs uppercase tracking-[0.2em] text-signal">
-            {dict.hero.labelBuild}
-          </span>
-          <span className="font-mono absolute bottom-[12%] right-0 text-xs uppercase tracking-[0.2em] text-infra">
-            {dict.hero.labelRun}
-          </span>
-        </div>
+        <Reveal delay={0.3} className="mx-auto w-full max-w-md lg:col-span-5 lg:max-w-none">
+          <Portrait
+            photo="jacket"
+            alt={dict.about.portraitAlt}
+            caption={site.location}
+            priority
+            className="mx-auto max-w-md"
+          />
+        </Reveal>
       </Container>
     </section>
   );

@@ -1,7 +1,7 @@
 # Riche Makso — Portfolio
 
 Portfolio bilingue (FR/EN) en Next.js 16 (App Router, Cache Components), React 19, TypeScript strict, Tailwind CSS 4.
-Direction artistique « Dark Engineering », scène 3D (React Three Fiber) avec équivalent SVG.
+Direction artistique « Dark Engineering », animations Motion, portraits en WebP optimisés.
 
 ## Démarrage
 
@@ -24,7 +24,7 @@ pnpm build && pnpm start
 | `content/projects.ts` | Projets et études de cas (`published: false` pour masquer) |
 | `content/skills.ts` | Compétences et niveaux (`practice` / `learning`) |
 | `lib/site.ts` | Identité et liens de contact (mettre `null` pour masquer un lien) |
-| `components/three/` | Scène 3D, fallback SVG, détection WebGL / appareil / mouvement réduit |
+| `components/site/portrait.tsx` | Portrait détouré sur panneau teinté (photos dans `public/me/`) |
 
 Voir [docs/CONTENT.md](docs/CONTENT.md) pour modifier le contenu.
 

@@ -57,10 +57,6 @@ const en: Dictionary = {
       "Full-Stack Development and DevOps, from application architecture to automated delivery.",
     ctaProjects: "View projects",
     ctaContact: "Start a conversation",
-    scene:
-      "Abstract representation of a distributed system: services linked together.",
-    labelBuild: "Build",
-    labelRun: "Run",
   },
   expertise: {
     eyebrow: "Two areas of expertise, one product",
