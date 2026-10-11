@@ -1,0 +1,30 @@
+# Verification pipeline only: no automatic production deployment.
+image: node:24-alpine
+
+stages:
+  - verify
+  - build
+
+default:
+  before_script:
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  cache:
+    key:
+      files: [pnpm-lock.yaml]
+    paths: [.pnpm-store]
+
+lint:
+  stage: verify
+  script: [pnpm lint]
+
+typecheck:
+  stage: verify
+  script: [pnpm typecheck]
+
+build:
+  stage: build
+  variables:
+    NEXT_TELEMETRY_DISABLED: "1"
+  script: [pnpm build]
