@@ -6,21 +6,22 @@ Monorepo : `web/` (Next.js 16, site public + espace `/admin`) et `api/` (NestJS 
 | --- | --- |
 | [web/](web/README.md) | Site bilingue FR/EN, administration, SEO |
 | [api/](api/README.md) | API, authentification, projets, messages, médias |
-| `docker-compose.yml` | Stack de déploiement (Dokploy) : web → api → PostgreSQL |
+| `docker-compose.prod.yml` / `.staging.yml` / `.dev.yml` | Stacks de déploiement Dokploy par environnement : web → api → PostgreSQL |
 | `docker-compose.local.yml` | Poste de dev : PostgreSQL + Mailpit |
-| `env/.env.<env>.example` | Variables à coller dans Dokploy (prod / staging / dev) |
+| `env/.env.<env>` (+ `.example`) | Variables à coller dans Dokploy (prod / staging / dev) ; les fichiers sans `.example` sont locaux et ignorés par Git |
 | [docs/DOKPLOY.md](docs/DOKPLOY.md) | Guide de déploiement pas à pas |
 
 ## Déploiement (Dokploy)
 
-TLS et routage sont assurés par Traefik (Dokploy) : la stack ne publie aucun port. Un seul compose
-pour tous les environnements, les variables font la différence. Voir [docs/DOKPLOY.md](docs/DOKPLOY.md).
+TLS et routage sont assurés par Traefik (Dokploy) : la stack ne publie aucun port. Un compose par
+environnement (noms de projet distincts, donc isolés sur un même VPS). Voir
+[docs/DOKPLOY.md](docs/DOKPLOY.md).
 
-| Env | `SITE_ENV` | Mails | Indexation |
+| Env | Compose path | Mails | Indexation |
 | --- | --- | --- | --- |
-| production | `production` | SMTP réel | oui |
-| staging | `staging` | SMTP de test / Mailpit | non |
-| dev | `dev` | Mailpit | non |
+| production | `docker-compose.prod.yml` | SMTP réel | oui |
+| staging | `docker-compose.staging.yml` | Mailpit | non |
+| dev | `docker-compose.dev.yml` | Mailpit | non |
 
 ## Développement local
 

@@ -1,0 +1,136 @@
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# DEVELOPMENT: shared integration server, never indexed, mails caught by Mailpit
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# Dokploy -> service "Docker Compose" -> Compose path: ./docker-compose.dev.yml
+# Variables: paste env/.env.dev in the service's Environment tab (see docs/DOKPLOY.md).
+#
+# TLS and routing are done by the Traefik of Dokploy: no reverse proxy here, no published port.
+# Domains tab: service `web`, port `3000`, HTTPS on (Let's Encrypt).
+name: portfolio-dev
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: portfolio
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks: [data]
+    mem_limit: ${DB_MEM_LIMIT:-256m}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio -d portfolio"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    logging: *logging
+
+  api:
+    build:
+      context: ./api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "4000"
+      # Hops in front of the API: Traefik -> Next.js (/backend proxy) -> API. Cloudflare in front: 3.
+      TRUST_PROXY: ${TRUST_PROXY:-2}
+      DATABASE_URL: postgresql://portfolio:${POSTGRES_PASSWORD}@db:5432/portfolio?schema=public
+      WEB_ORIGINS: ${SITE_URL:?set SITE_URL}
+      SITE_URL: ${SITE_URL}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:?set INTERNAL_API_KEY}
+      WEB_REVALIDATE_URL: http://web:3000/api/revalidate
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:?set REVALIDATE_SECRET}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set JWT_ACCESS_SECRET}
+      OTP_SECRET: ${OTP_SECRET:?set OTP_SECRET}
+      # Defaults to the bundled Mailpit; set SMTP_HOST (+ SMTP_*) to use a real test mailbox.
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      CONTACT_TO: ${CONTACT_TO:-}
+      UPLOAD_DIR: /app/uploads
+      # First run: the setup wizard (/admin/setup) creates the owner account; its one-time token is
+      # printed in the api logs (or fixed with SETUP_TOKEN).
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
+      # Non-interactive alternative: with ADMIN_PASSWORD set the account is created at startup.
+      # Remove ADMIN_PASSWORD from the environment once the account exists.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_NAME: ${ADMIN_NAME:-Admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+    volumes:
+      - uploads:/app/uploads
+    # `app` has outbound access (SMTP); the database lives on the isolated `data` network.
+    networks: [data, app]
+    mem_limit: ${API_MEM_LIMIT:-384m}
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    logging: *logging
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL:?set SITE_URL}
+        # production | staging | dev: anything but production is served noindex.
+        NEXT_PUBLIC_SITE_ENV: dev
+        # Baked into the /backend rewrite at build time.
+        API_URL: http://api:4000
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_URL: http://api:4000
+      NEXT_PUBLIC_SITE_ENV: dev
+      NEXT_PUBLIC_SITE_URL: ${SITE_URL}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET}
+      # Reverse proxies in front of Next.js that append to X-Forwarded-For (Traefik = 1).
+      # Used to derive the real visitor IP for rate limiting: never set more than the real number.
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-1}
+    expose: ["3000"]
+    # dokploy-network is how Traefik reaches the site.
+    networks: [app, dokploy-network]
+    mem_limit: ${WEB_MEM_LIMIT:-640m}
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    logging: *logging
+
+  # Catches every outgoing mail (OTP codes, contact notifications): nothing leaves the server.
+  # Domains tab: add a domain on service `mailpit`, port 8025 (e.g. mail.<your domain>).
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: "500"
+      # Required "user:password". Never reuse a security secret (OTP_SECRET, JWT...) here.
+      MP_UI_AUTH: ${MAILPIT_AUTH:?set MAILPIT_AUTH (user:password)}
+    expose: ["8025"]
+    networks: [app, dokploy-network]
+    mem_limit: 128m
+    logging: *logging
+
+networks:
+  # Isolated: db <-> api (+ backups) only.
+  data:
+    internal: true
+  # api <-> web. Not published; api needs egress for SMTP.
+  app: {}
+  # Created and owned by Dokploy (Traefik lives on it).
+  dokploy-network:
+    external: true
+
+volumes:
+  pgdata:
+  uploads:

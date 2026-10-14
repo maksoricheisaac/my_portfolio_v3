@@ -172,7 +172,7 @@ OWASP Top 10:2025 : A01 Broken Access Control, A02 Security Misconfiguration, A0
 
 ### SEC-008 — Mot de passe Mailpit par défaut égal à `OTP_SECRET`
 - **Gravité** : Faible · **Statut** : Confirmée · **Priorité** : P2
-- **Localisation** : `docker-compose.yml`, `MP_UI_AUTH: ${MAILPIT_AUTH:-mailpit:${OTP_SECRET}}`.
+- **Localisation** : `docker-compose.{prod,staging,dev}.yml`, `MP_UI_AUTH: ${MAILPIT_AUTH:-mailpit:${OTP_SECRET}}`.
 - **Preuve** : la valeur de repli est le secret lui-même (le commentaire dit « derived »).
 - **Impact** : toute personne qui accède à Mailpit ou à ses logs connaît `OTP_SECRET` ; Mailpit contient précisément les codes OTP.
 - **Correction** : `${MAILPIT_AUTH:?set MAILPIT_AUTH}`.
@@ -329,8 +329,8 @@ L'application présente une base de sécurité nettement supérieure à la moyen
 | SEC-005 | URLs de profil limitées à `http(s)` | `settings.ts` | Compilation |
 | SEC-006 | `overrides` `mysql2>=3.23.1`, `deepmerge-ts>=8.0.0` | `api/pnpm-workspace.yaml` | `pnpm audit --prod` : 0 vulnérabilité ; `prisma validate`/`generate`, build et tests OK |
 | SEC-007 | Étapes `dependency-audit` et `secret-scan` (gitleaks) dans la CI web, nouvelle CI API | `web/.gitlab-ci.yml`, `api/.gitlab-ci.yml` | Fichiers non exécutés (GitLab) |
-| SEC-008 | `MAILPIT_AUTH` obligatoire, placeholders explicites | `docker-compose.yml`, `env/*.example` | Revue |
-| SEC-009 | Documentation du retrait d'`ADMIN_PASSWORD` | `docker-compose.yml`, `docs/DOKPLOY.md` | Revue |
+| SEC-008 | `MAILPIT_AUTH` obligatoire, placeholders explicites | `docker-compose.{prod,staging,dev}.yml`, `env/*.example` | Revue |
+| SEC-009 | Documentation du retrait d'`ADMIN_PASSWORD` | `docker-compose.{prod,staging,dev}.yml`, `docs/DOKPLOY.md` | Revue |
 | SEC-011 | Événements de sécurité écrits dans les logs (`SECURITY …`), purge quotidienne des IP/user agents de messages > 90 jours | `audit.service.ts`, `messages.service.ts` | Compilation |
 | SEC-012 | Images du contenu riche limitées à la médiathèque (`/backend/media/<32 hex>.webp`) | `sanitize.ts` | Tests unitaires |
 | SEC-013 | Rewrite `/backend` limité à `auth`, `admin`, `public`, `media`, `setup` ; `setup/status` ne révèle plus rien une fois configuré | `next.config.ts`, `setup.service.ts` | `/backend/health` → 404 |
