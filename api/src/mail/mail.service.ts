@@ -70,9 +70,25 @@ export class MailService {
       });
       return true;
     } catch (error) {
-      // Class only: never log recipients, codes or message bodies.
+      // Diagnostic detail without personal data: the failure code and the first line of the
+      // reason, with e-mail addresses and long digit runs (OTP codes) masked. Never the body,
+      // the recipient, the credentials or the raw subject (it carries the OTP code).
+      const e = error as Error & {
+        code?: string;
+        responseCode?: number;
+        command?: string;
+      };
+      const mask = (v: string) =>
+        v
+          .replace(/[^\s@<>"']+@[^\s@<>"']+/g, '<email>')
+          .replace(/\d{4,}/g, '******');
+      const detail = [e.code, e.responseCode, e.command]
+        .filter((v) => v !== undefined && v !== '')
+        .join(' ');
+      const firstLine = (e.message ?? '').split(/[\r\n]/)[0] ?? '';
+      const reason = mask(firstLine).slice(0, 200);
       this.logger.error(
-        `Mail "${input.subject}" failed: ${(error as Error).name}`,
+        `Mail "${mask(input.subject)}" failed: ${e.name}${detail ? ` [${detail}]` : ''}${reason ? ` — ${reason}` : ''}`,
       );
       return false;
     }
