@@ -35,6 +35,18 @@ export class MailService {
     return this.config.get('MAIL_FROM') || this.config.get('SMTP_USER') || '';
   }
 
+  /**
+   * MAIL_FROM may be a bare address or "Name <address>". The SMTP envelope sender must be the
+   * bare address (servers reject `<Name <address>>`), so the two parts are separated here.
+   */
+  private get sender(): { name?: string; address: string } {
+    const raw = this.from.trim();
+    const m = /^(.*?)\s*<([^<>\s]+@[^<>\s]+)>$/.exec(raw);
+    if (!m) return { address: raw };
+    const name = m[1].replace(/^["']|["']$/g, '').trim();
+    return { name: name || undefined, address: m[2] };
+  }
+
   private getTransporter(): Transporter {
     if (this.transporter) return this.transporter;
     const port = this.config.get('SMTP_PORT');
@@ -61,7 +73,10 @@ export class MailService {
     }
     try {
       await this.getTransporter().sendMail({
-        from: { name: input.fromName ?? 'Portfolio', address: this.from },
+        from: {
+          name: input.fromName ?? this.sender.name ?? 'Portfolio',
+          address: this.sender.address,
+        },
         to: input.to,
         replyTo: input.replyTo,
         subject: input.subject.replace(/[\r\n]+/g, ' '),
