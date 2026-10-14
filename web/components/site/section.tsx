@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DrawLine } from "@/components/motion/interactive";
 import { Reveal, WordReveal } from "@/components/motion/reveal";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ export function SectionHeading({
       <h2 className="font-display mt-4 text-balance text-4xl font-semibold leading-[1.05] sm:text-5xl">
         {title}
       </h2>
+      <DrawLine className="mt-6 block h-px w-20 origin-left bg-gradient-to-r from-signal to-transparent" />
       {intro && (
         <p className="mt-5 max-w-2xl text-pretty text-lg text-muted-foreground">
           {intro}

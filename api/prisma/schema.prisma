@@ -1,0 +1,173 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OtpPurpose {
+  LOGIN
+  PASSWORD_RESET
+}
+
+enum MessageStatus {
+  NEW
+  READ
+  ARCHIVED
+  SPAM
+}
+
+model AdminUser {
+  id               String    @id @default(cuid())
+  email            String    @unique
+  name             String
+  passwordHash     String
+  /** Email OTP required after the password on every login. */
+  twoFactorEnabled Boolean   @default(true)
+  failedLogins     Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  passwordChangedAt DateTime @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  sessions RefreshSession[]
+  otps     OtpCode[]
+  audits   AuditLog[]
+}
+
+model RefreshSession {
+  id         String    @id @default(cuid())
+  userId     String
+  user       AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /** SHA-256 of the opaque refresh token; the token itself is never stored. */
+  tokenHash  String    @unique
+  /** Every rotation of the same login shares a family: reuse of an old token revokes the family. */
+  family     String
+  userAgent  String?
+  ip         String?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([family])
+}
+
+model OtpCode {
+  id         String     @id @default(cuid())
+  userId     String
+  user       AdminUser  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose    OtpPurpose
+  /** HMAC of the code, never the code itself. */
+  codeHash   String
+  attempts   Int        @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime   @default(now())
+
+  @@index([userId, purpose])
+}
+
+model Project {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  published    Boolean  @default(false)
+  featured     Boolean  @default(false)
+  sortOrder    Int      @default(0)
+  category     String
+  status       String
+  visual       String   @default("marketplace")
+  domain       String   @default("fullstack")
+  confidential Boolean  @default(false)
+  stackPlanned Boolean  @default(false)
+  stack        String[]
+  title        String
+
+  taglineFr      String
+  taglineEn      String
+  summaryFr      String
+  summaryEn      String
+  problemFr      String
+  problemEn      String
+  contributionFr String
+  contributionEn String
+  /** Rich text (sanitised HTML) shown as the case study body. */
+  contentFr      String   @default("")
+  contentEn      String   @default("")
+
+  liveUrl  String?
+  repoUrl  String?
+  siteUrl  String?
+  coverId  String?
+  cover    Media?   @relation(fields: [coverId], references: [id], onDelete: SetNull)
+
+  /** Optional structured case-study blocks (goals, architecture, decisions…). */
+  details  Json?
+  related  String[]
+
+  seoTitleFr       String?
+  seoTitleEn       String?
+  seoDescriptionFr String?
+  seoDescriptionEn String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published, sortOrder])
+}
+
+model Message {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  body      String
+  lang      String        @default("fr")
+  status    MessageStatus @default(NEW)
+  ip        String?
+  userAgent String?
+  note      String?
+  mailSent  Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  readAt    DateTime?
+
+  @@index([status, createdAt])
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  filename  String   @unique
+  original  String
+  mimeType  String
+  size      Int
+  width     Int?
+  height    Int?
+  alt       String   @default("")
+  createdAt DateTime @default(now())
+
+  projects Project[]
+}
+
+model SiteSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String     @id @default(cuid())
+  userId    String?
+  user      AdminUser? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  target    String?
+  ip        String?
+  meta      Json?
+  createdAt DateTime   @default(now())
+
+  @@index([createdAt])
+}

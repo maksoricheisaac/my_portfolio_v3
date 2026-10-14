@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { PageFallback } from "@/components/site/page-fallback";
 import { notFound } from "next/navigation";
-import { ProjectMockup } from "@/components/project/project-mockup";
+import { hasCover, ProjectVisual } from "@/components/project/project-visual";
 import {
   ProjectShowcase,
   type ShowcaseItem,
@@ -8,9 +10,14 @@ import {
 import { Reveal } from "@/components/motion/reveal";
 import { Container, PageHeader } from "@/components/site/section";
 import { getDictionary } from "@/content/dictionaries";
-import { publishedProjects, type Project } from "@/content/projects";
-import { hasLocale, href, t, type Locale } from "@/lib/i18n";
+import type { Project } from "@/content/projects";
+import { getProjects } from "@/lib/api";
+import { locales, hasLocale, href, t, type Locale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/seo";
+
+export function generateStaticParams() {
+  return locales.map((lang) => ({ lang }));
+}
 
 export async function generateMetadata({
   params,
@@ -31,13 +38,14 @@ function recurringStack(list: Project[], n = 4): string[] {
     .map(([s]) => s);
 }
 
-export default async function ProjectsPage({
+async function ProjectsPageContent({
   params,
 }: PageProps<"/[lang]/projects">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
   const d = dict.projects;
+  const publishedProjects = await getProjects();
 
   const items: ShowcaseItem[] = publishedProjects.map((p) => {
     const accent = p.domain === "devops" ? "infra" : "signal";
@@ -59,7 +67,8 @@ export default async function ProjectsPage({
         p.links?.repo && { label: d.linkLabels.repo, url: p.links.repo },
       ].filter((l): l is { label: string; url: string } => Boolean(l)),
       accent,
-      visual: <ProjectMockup kind={p.visual} accent={accent} />,
+      visual: <ProjectVisual project={p} accent={accent} />,
+      conceptual: !hasCover(p),
     };
   });
 
@@ -99,5 +108,13 @@ export default async function ProjectsPage({
         />
       </div>
     </Container>
+  );
+}
+
+export default function ProjectsPage(props: PageProps<"/[lang]/projects">) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <ProjectsPageContent {...props} />
+    </Suspense>
   );
 }

@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
+import { cacheLife, cacheTag } from "next/cache";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { Footer } from "@/components/site/footer";
 import { Header } from "@/components/site/header";
 import { MotionProvider } from "@/components/motion/reveal";
+import { ScrollProgress } from "@/components/motion/scroll-progress";
 import { getDictionary } from "@/content/dictionaries";
+import { getSettings } from "@/lib/api";
 import { hasLocale, locales } from "@/lib/i18n";
-import { site } from "@/lib/site";
+import { isProduction, site } from "@/lib/site";
 import "../globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -18,7 +21,7 @@ const display = Bricolage_Grotesque({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#0d0e11",
+  themeColor: "#08090b",
   colorScheme: "dark",
 };
 
@@ -29,15 +32,38 @@ export function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: LayoutProps<"/[lang]">): Promise<Metadata> {
+  // The metadata depends on admin-editable settings (external data) and on the language only:
+  // cache it, and refresh it through the "settings" tag after an admin change.
+  "use cache";
+  cacheTag("settings");
+  cacheLife({ stale: 60, revalidate: 300, expire: 3600 });
+
   const { lang } = await params;
   if (!hasLocale(lang)) return {};
   const dict = await getDictionary(lang);
+  const seo = (await getSettings())?.seo;
+  const title = seo?.siteTitle[lang] || dict.meta.siteTitle;
+  const description = seo?.description[lang] || dict.meta.description;
+  const keywords = seo?.keywords[lang]
+    ?.split(",")
+    .map((k) => k.trim())
+    .filter(Boolean);
   return {
-    metadataBase: new URL(site.url),
-    title: { default: dict.meta.siteTitle, template: `%s — ${site.name}` },
-    description: dict.meta.description,
+    // Cached metadata must be serializable: a URL instance is not, a string is accepted.
+    metadataBase: site.url as unknown as URL,
+    title: { default: title, template: `%s — ${site.name}` },
+    description,
+    keywords: keywords?.length ? keywords : undefined,
     authors: [{ name: site.name }],
     creator: site.name,
+    robots:
+      !isProduction || (seo && !seo.indexable)
+        ? { index: false, follow: false }
+        : undefined,
+    verification: seo?.googleSiteVerification
+      ? { google: seo.googleSiteVerification }
+      : undefined,
+    twitter: seo?.twitterHandle ? { creator: seo.twitterHandle } : undefined,
   };
 }
 
@@ -62,6 +88,7 @@ export default async function RootLayout({
           {dict.common.skip}
         </a>
         <MotionProvider>
+        <ScrollProgress />
         <Header
           lang={lang}
           labels={{

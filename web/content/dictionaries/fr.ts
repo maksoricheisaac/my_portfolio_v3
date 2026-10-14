@@ -260,7 +260,7 @@ const fr = {
       sending: "Envoi en cours…",
       successTitle: "Message envoyé",
       successText:
-        "Merci, j'ai bien reçu votre message. Un email de confirmation vient de vous être envoyé et je reviens vers vous très bientôt.",
+        "Merci, j'ai bien reçu votre message. Un email de confirmation peut vous être envoyé ; je reviens vers vous très bientôt.",
       sendAnother: "Envoyer un autre message",
       errors: {
         nameRequired: "Indiquez votre nom (2 caractères minimum).",

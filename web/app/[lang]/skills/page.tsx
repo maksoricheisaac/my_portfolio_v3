@@ -1,13 +1,19 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { PageFallback } from "@/components/site/page-fallback";
 import { notFound } from "next/navigation";
 import { ContactCta } from "@/components/sections/contact-cta";
 import { Reveal } from "@/components/motion/reveal";
 import { Container, PageHeader } from "@/components/site/section";
 import { getDictionary } from "@/content/dictionaries";
 import { skillGroups } from "@/content/skills";
-import { hasLocale, t } from "@/lib/i18n";
+import { locales, hasLocale, t } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/seo";
 import { cn } from "@/lib/utils";
+
+export function generateStaticParams() {
+  return locales.map((lang) => ({ lang }));
+}
 
 export async function generateMetadata({
   params,
@@ -18,7 +24,7 @@ export async function generateMetadata({
   return pageMetadata({ lang, route: "skills", ...meta.pages.skills });
 }
 
-export default async function SkillsPage({ params }: PageProps<"/[lang]/skills">) {
+async function SkillsPageContent({ params }: PageProps<"/[lang]/skills">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
@@ -93,5 +99,13 @@ export default async function SkillsPage({ params }: PageProps<"/[lang]/skills">
       </Container>
       <ContactCta lang={lang} dict={dict} />
     </>
+  );
+}
+
+export default function SkillsPage(props: PageProps<"/[lang]/skills">) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <SkillsPageContent {...props} />
+    </Suspense>
   );
 }

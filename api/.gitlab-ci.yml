@@ -1,0 +1,42 @@
+# Verification pipeline for the NestJS API: no automatic production deployment.
+image: node:24-alpine
+
+stages:
+  - verify
+  - security
+  - build
+
+default:
+  before_script:
+    - corepack enable
+    - pnpm config set store-dir .pnpm-store
+    - pnpm install --frozen-lockfile
+  cache:
+    key:
+      files: [pnpm-lock.yaml]
+    paths: [.pnpm-store]
+
+typecheck:
+  stage: verify
+  script: [pnpm exec tsc --noEmit]
+
+test:
+  stage: verify
+  script: [pnpm test]
+
+dependency-audit:
+  stage: security
+  script: [pnpm audit --prod --audit-level=high]
+
+secret-scan:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:v8.18.4
+    entrypoint: [""]
+  before_script: []
+  cache: {}
+  script: [gitleaks detect --source . --redact --no-banner --verbose]
+
+build:
+  stage: build
+  script: [pnpm build]

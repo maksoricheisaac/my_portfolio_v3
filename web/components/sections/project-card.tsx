@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import { ProjectMockup } from "@/components/project/project-mockup";
+import { ProjectVisual } from "@/components/project/project-visual";
 import { GlowCard } from "@/components/site/glow-card";
 import type { Dictionary } from "@/content/dictionaries";
 import type { Project } from "@/content/projects";
@@ -22,7 +22,7 @@ export function ProjectCard({
       glow={`var(--${accent})`}
       className="group flex h-full flex-col gap-5 p-5 transition-transform duration-300 hover:-translate-y-1"
     >
-      <ProjectMockup kind={project.visual} accent={accent} />
+      <ProjectVisual project={project} accent={accent} />
       <div className="flex flex-1 flex-col px-1 pb-1">
         <p className="eyebrow">{t(project.tagline, lang)}</p>
         <h3 className="font-display mt-2 text-2xl font-semibold">

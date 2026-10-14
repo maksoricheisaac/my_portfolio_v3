@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { PageFallback } from "@/components/site/page-fallback";
 import { notFound } from "next/navigation";
 import { ContactCta } from "@/components/sections/contact-cta";
 import { Reveal } from "@/components/motion/reveal";
 import { Portrait } from "@/components/site/portrait";
 import { Container, PageHeader } from "@/components/site/section";
 import { getDictionary } from "@/content/dictionaries";
-import { hasLocale } from "@/lib/i18n";
+import { locales, hasLocale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/seo";
+
+export function generateStaticParams() {
+  return locales.map((lang) => ({ lang }));
+}
 
 export async function generateMetadata({
   params,
@@ -17,7 +23,7 @@ export async function generateMetadata({
   return pageMetadata({ lang, route: "about", ...meta.pages.about });
 }
 
-export default async function AboutPage({ params }: PageProps<"/[lang]/about">) {
+async function AboutPageContent({ params }: PageProps<"/[lang]/about">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
@@ -70,5 +76,13 @@ export default async function AboutPage({ params }: PageProps<"/[lang]/about">) 
       </Container>
       <ContactCta lang={lang} dict={dict} />
     </>
+  );
+}
+
+export default function AboutPage(props: PageProps<"/[lang]/about">) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <AboutPageContent {...props} />
+    </Suspense>
   );
 }

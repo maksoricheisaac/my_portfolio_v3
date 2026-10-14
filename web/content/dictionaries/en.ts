@@ -260,7 +260,7 @@ const en: Dictionary = {
       sending: "Sending…",
       successTitle: "Message sent",
       successText:
-        "Thank you, I received your message. A confirmation email has just been sent to you and I will get back to you very soon.",
+        "Thank you, I received your message. A confirmation email may be sent to you; I will get back to you very soon.",
       sendAnother: "Send another message",
       errors: {
         nameRequired: "Please enter your name (2 characters minimum).",

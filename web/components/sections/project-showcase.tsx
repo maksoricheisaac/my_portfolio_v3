@@ -22,6 +22,8 @@ export interface ShowcaseItem {
   links: { label: string; url: string }[];
   accent: "signal" | "infra";
   visual: ReactNode;
+  /** True when `visual` is the CSS mockup (not a real image): the "conceptual" note applies. */
+  conceptual: boolean;
 }
 
 export interface ShowcaseLabels {
@@ -116,7 +118,9 @@ export function ProjectShowcase({
                       {p.visual}
                     </div>
                   </motion.div>
-                  <p className="font-mono mt-3 text-[0.7rem] text-subtle">{labels.previewNote}</p>
+                  {p.conceptual && (
+                    <p className="font-mono mt-3 text-[0.7rem] text-subtle">{labels.previewNote}</p>
+                  )}
                 </div>
 
                 <div className={cn("lg:col-span-6", flip ? "lg:order-1" : "lg:order-2")}>

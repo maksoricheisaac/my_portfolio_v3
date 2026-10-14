@@ -8,7 +8,7 @@ const photos = {
 } as const;
 
 /**
- * Cut-out portrait on a quiet blue-tinted panel (the dark suit would vanish on the page background).
+ * Cut-out portrait on a quiet green-tinted panel (the dark suit would vanish on the page background).
  * Images are pre-optimised WebP (900×1200), so Next's runtime optimiser is not needed.
  */
 export function Portrait({

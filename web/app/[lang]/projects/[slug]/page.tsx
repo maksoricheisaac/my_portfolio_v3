@@ -1,37 +1,44 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { PageFallback } from "@/components/site/page-fallback";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 import { Reveal } from "@/components/motion/reveal";
 import { ArchitectureDiagram } from "@/components/project/architecture-diagram";
-import { ProjectMockup } from "@/components/project/project-mockup";
+import { hasCover, ProjectVisual } from "@/components/project/project-visual";
 import { ContactCta } from "@/components/sections/contact-cta";
 import { ProjectCard } from "@/components/sections/project-card";
 import { Container } from "@/components/site/section";
 import { getDictionary } from "@/content/dictionaries";
-import { getProject, publishedProjects } from "@/content/projects";
+import { getProject, getProjects } from "@/lib/api";
 import { hasLocale, href, locales, t, type Localized } from "@/lib/i18n";
-import { pageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/site/json-ld";
+import { absoluteUrl, pageMetadata } from "@/lib/seo";
+import { site } from "@/lib/site";
 
-export function generateStaticParams() {
-  return locales.flatMap((lang) =>
-    publishedProjects.map((p) => ({ lang, slug: p.slug })),
-  );
+export async function generateStaticParams() {
+  const projects = await getProjects();
+  return locales.flatMap((lang) => projects.map((p) => ({ lang, slug: p.slug })));
 }
 
 export async function generateMetadata({
   params,
 }: PageProps<"/[lang]/projects/[slug]">): Promise<Metadata> {
   const { lang, slug } = await params;
-  const project = getProject(slug);
+  const project = await getProject(slug);
   if (!hasLocale(lang) || !project) return {};
   return pageMetadata({
     lang,
     route: "projects",
     rest: [slug],
-    title: project.title,
-    description: t(project.summary, lang),
+    title: project.seo?.title?.[lang] || project.title,
+    description: project.seo?.description?.[lang] || t(project.summary, lang),
+    image: project.cover?.url,
+    imageAlt: project.cover?.alt || project.title,
+    type: "article",
+    modified: project.updatedAt,
   });
 }
 
@@ -47,11 +54,11 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export default async function ProjectPage({
+async function ProjectPageContent({
   params,
 }: PageProps<"/[lang]/projects/[slug]">) {
   const { lang, slug } = await params;
-  const project = getProject(slug);
+  const project = await getProject(slug);
   if (!hasLocale(lang) || !project) notFound();
   const dict = await getDictionary(lang);
   const d = dict.projects;
@@ -72,9 +79,12 @@ export default async function ProjectPage({
     </ul>
   );
 
+  const all = await getProjects();
   const related = (project.related ?? [])
-    .map(getProject)
+    .map((s) => all.find((p) => p.slug === s))
     .filter((p) => p !== undefined);
+  const body = project.content?.[lang]?.trim();
+  const pageUrl = absoluteUrl(href(lang, "projects", slug));
 
   const links = [
     project.links?.live && { label: d.linkLabels.live, url: project.links.live },
@@ -84,6 +94,30 @@ export default async function ProjectPage({
 
   return (
     <>
+      <JsonLd
+        data={[
+          {
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            name: project.title,
+            description: t(project.summary, lang),
+            url: pageUrl,
+            inLanguage: lang,
+            author: { "@type": "Person", name: site.name, url: absoluteUrl(`/${lang}`) },
+            keywords: project.stack.join(", "),
+            image: project.cover ? absoluteUrl(project.cover.url) : undefined,
+            dateModified: project.updatedAt,
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: dict.nav.projects, item: absoluteUrl(href(lang, "projects")) },
+              { "@type": "ListItem", position: 2, name: project.title, item: pageUrl },
+            ],
+          },
+        ]}
+      />
       <Container className="py-14 sm:py-20">
         <Link
           href={href(lang, "projects")}
@@ -110,8 +144,10 @@ export default async function ProjectPage({
             </Reveal>
           </div>
           <Reveal delay={0.3} className="lg:col-span-5">
-            <ProjectMockup kind={project.visual} accent={accent} />
-            <p className="font-mono mt-3 text-[0.7rem] text-subtle">{d.previewNote}</p>
+            <ProjectVisual project={project} accent={accent} />
+            {!hasCover(project) && (
+              <p className="font-mono mt-3 text-[0.7rem] text-subtle">{d.previewNote}</p>
+            )}
           </Reveal>
         </div>
 
@@ -209,6 +245,15 @@ export default async function ProjectPage({
               </ul>
             </Block>
           )}
+          {body && (
+            <Reveal as="section" className="border-t border-border py-10">
+              <div
+                className="rich-content mx-auto max-w-3xl"
+                // Sanitised server-side by the API on every write.
+                dangerouslySetInnerHTML={{ __html: body }}
+              />
+            </Reveal>
+          )}
           <Block title={s.state}>
             <p className="text-foreground">{d.status[project.status]}</p>
             {project.nextSteps && list(project.nextSteps)}
@@ -248,5 +293,13 @@ export default async function ProjectPage({
       </Container>
       <ContactCta lang={lang} dict={dict} title={d.ctaTitle} text={d.ctaText} />
     </>
+  );
+}
+
+export default function ProjectPage(props: PageProps<"/[lang]/projects/[slug]">) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <ProjectPageContent {...props} />
+    </Suspense>
   );
 }

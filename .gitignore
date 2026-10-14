@@ -1,0 +1,6 @@
+# Real environment files (only the *.example templates are committed)
+.env
+env/.env.dev
+env/.env.staging
+env/.env.prod
+backups/

@@ -1,9 +1,15 @@
 import type { MetadataRoute } from "next";
-import { site } from "@/lib/site";
+import { getSettings } from "@/lib/api";
+import { isProduction, site } from "@/lib/site";
 
-export default function robots(): MetadataRoute.Robots {
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  const settings = await getSettings();
+  const indexable = isProduction && (settings?.seo.indexable ?? true);
   return {
-    rules: { userAgent: "*", allow: "/" },
+    rules: indexable
+      ? { userAgent: "*", allow: "/", disallow: ["/admin", "/backend", "/api"] }
+      : { userAgent: "*", disallow: "/" },
     sitemap: `${site.url}/sitemap.xml`,
+    host: site.url,
   };
 }

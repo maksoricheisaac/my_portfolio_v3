@@ -1,14 +1,22 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { PageFallback } from "@/components/site/page-fallback";
 import { notFound } from "next/navigation";
+import { Marquee } from "@/components/motion/marquee";
 import { AboutTeaser } from "@/components/sections/about-teaser";
-import { Approach } from "@/components/sections/approach";
 import { ContactCta } from "@/components/sections/contact-cta";
-import { Expertise } from "@/components/sections/expertise";
 import { FeaturedProjects } from "@/components/sections/featured-projects";
 import { Hero } from "@/components/sections/hero";
-import { Stack } from "@/components/sections/stack";
+import { ArchitectureExplorer } from "@/components/experience/architecture-explorer";
+import { Journey } from "@/components/experience/journey";
+import { KineticType } from "@/components/experience/kinetic-type";
+import { PipelineSimulation } from "@/components/experience/pipeline-simulation";
+import { SkillsExplorer } from "@/components/experience/skills-explorer";
 import { getDictionary } from "@/content/dictionaries";
-import { hasLocale } from "@/lib/i18n";
+import { skillGroups } from "@/content/skills";
+import { getProjects, getSettings } from "@/lib/api";
+import { JsonLd } from "@/components/site/json-ld";
+import { hasLocale, href } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
@@ -18,46 +26,86 @@ export async function generateMetadata({
   const { lang } = await params;
   if (!hasLocale(lang)) return {};
   const dict = await getDictionary(lang);
+  const seo = (await getSettings())?.seo;
+  const title = seo?.siteTitle[lang] || dict.meta.siteTitle;
+  const description = seo?.description[lang] || dict.meta.description;
   return {
-    ...pageMetadata({
-      lang,
-      route: "home",
-      title: dict.meta.siteTitle,
-      description: dict.meta.description,
-    }),
-    title: { absolute: dict.meta.siteTitle },
+    ...pageMetadata({ lang, route: "home", title, description }),
+    title: { absolute: title },
   };
 }
 
-export default async function HomePage({ params }: PageProps<"/[lang]">) {
+async function HomePageContent({ params }: PageProps<"/[lang]">) {
   const { lang } = await params;
   if (!hasLocale(lang)) notFound();
   const dict = await getDictionary(lang);
 
-  const jsonLd = {
+  const profile = (await getSettings())?.profile;
+  const projectList = await getProjects();
+
+  const person = {
     "@context": "https://schema.org",
     "@type": "Person",
-    name: site.name,
+    "@id": `${site.url}/#person`,
+    name: profile?.name || site.name,
     url: `${site.url}/${lang}`,
-    jobTitle: lang === "fr" ? "Développeur Full-Stack & Junior DevOps" : "Full-Stack Developer & Junior DevOps",
+    jobTitle:
+      profile?.jobTitle[lang] ||
+      (lang === "fr" ? "Développeur Full-Stack & Junior DevOps" : "Full-Stack Developer & Junior DevOps"),
     address: { "@type": "PostalAddress", addressLocality: "Brazzaville", addressCountry: "CG" },
     image: `${site.url}/me/portrait-crossed.webp`,
-    sameAs: [site.linkedin, site.github].filter(Boolean),
+    sameAs: [profile?.linkedin || site.linkedin, profile?.github || site.github].filter(Boolean),
+  };
+  const website = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": `${site.url}/#website`,
+    url: site.url,
+    name: site.name,
+    inLanguage: lang,
+    publisher: { "@id": `${site.url}/#person` },
   };
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
-      />
+      <JsonLd data={[person, website]} />
       <Hero lang={lang} dict={dict} />
-      <Expertise lang={lang} dict={dict} />
+      <div className="border-y border-border bg-surface/30 py-5">
+        <Marquee
+          label={dict.stack.title}
+          items={skillGroups.flatMap((g) =>
+            g.skills.filter((sk) => sk.level === "practice").map((sk) => sk.name),
+          )}
+        />
+      </div>
+      <KineticType lang={lang} />
       <AboutTeaser lang={lang} dict={dict} />
       <FeaturedProjects lang={lang} dict={dict} />
-      <Approach dict={dict} />
-      <Stack lang={lang} dict={dict} />
+      <ArchitectureExplorer lang={lang} />
+      <PipelineSimulation lang={lang} />
+      <SkillsExplorer
+        lang={lang}
+        projects={projectList.map((p) => ({
+          slug: p.slug,
+          title: p.title,
+          stack: p.stack,
+          href: href(lang, "projects", p.slug),
+        }))}
+      />
+      <Journey
+        lang={lang}
+        projectsBase={href(lang, "projects")}
+        projectSlugs={projectList.map((p) => p.slug)}
+      />
       <ContactCta lang={lang} dict={dict} />
     </>
+  );
+}
+
+export default function HomePage(props: PageProps<"/[lang]">) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <HomePageContent {...props} />
+    </Suspense>
   );
 }

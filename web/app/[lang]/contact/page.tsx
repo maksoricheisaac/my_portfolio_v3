@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { PageFallback } from "@/components/site/page-fallback";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, MapPin } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
@@ -7,9 +9,13 @@ import { Portrait } from "@/components/site/portrait";
 import { Container, PageHeader } from "@/components/site/section";
 import { CopyButton } from "@/components/site/copy-button";
 import { getDictionary } from "@/content/dictionaries";
-import { hasLocale } from "@/lib/i18n";
+import { locales, hasLocale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
+
+export function generateStaticParams() {
+  return locales.map((lang) => ({ lang }));
+}
 
 export async function generateMetadata({
   params,
@@ -20,7 +26,7 @@ export async function generateMetadata({
   return pageMetadata({ lang, route: "contact", ...meta.pages.contact });
 }
 
-export default async function ContactPage({
+async function ContactPageContent({
   params,
 }: PageProps<"/[lang]/contact">) {
   const { lang } = await params;
@@ -91,5 +97,13 @@ export default async function ContactPage({
       </Reveal>
       </div>
     </Container>
+  );
+}
+
+export default function ContactPage(props: PageProps<"/[lang]/contact">) {
+  return (
+    <Suspense fallback={<PageFallback />}>
+      <ContactPageContent {...props} />
+    </Suspense>
   );
 }

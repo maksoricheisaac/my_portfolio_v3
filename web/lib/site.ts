@@ -4,6 +4,10 @@ import type { Localized } from "@/lib/i18n";
  * Central, editable identity data. Everything here is shown publicly:
  * set a value to `null` to hide the corresponding link.
  */
+/** false on dev / staging deployments: they must never be indexed. */
+export const isProduction =
+  (process.env.NEXT_PUBLIC_SITE_ENV ?? "production") === "production";
+
 export const site = {
   name: "Riche Makso",
   legalName: "Riche Isaac Makso",
@@ -16,7 +20,7 @@ export const site = {
   whatsapp: "https://wa.me/242056073456",
   /** Shown as a quiet status line. Set to `null` to hide it entirely. */
   availability: {
-    fr: "Ouvert aux collaborations et missions techniques",
-    en: "Open to collaborations and technical missions",
+    fr: "Ouvert aux projets",
+    en: "Open to projects",
   } satisfies Localized as Localized | null,
 };

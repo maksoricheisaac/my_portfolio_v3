@@ -4,10 +4,11 @@ import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { Container, SectionHeading } from "@/components/site/section";
 import { ProjectCard } from "@/components/sections/project-card";
 import type { Dictionary } from "@/content/dictionaries";
-import { featuredProjects } from "@/content/projects";
+import { getFeaturedProjects } from "@/lib/api";
 import { href, type Locale } from "@/lib/i18n";
 
-export function FeaturedProjects({ lang, dict }: { lang: Locale; dict: Dictionary }) {
+export async function FeaturedProjects({ lang, dict }: { lang: Locale; dict: Dictionary }) {
+  const featuredProjects = await getFeaturedProjects();
   return (
     <section className="border-y border-border bg-surface/40 py-24 sm:py-32">
       <Container>

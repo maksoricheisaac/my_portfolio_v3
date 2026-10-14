@@ -61,6 +61,16 @@ export interface Project {
   challenges?: { problem: Localized; solution: Localized }[];
   nextSteps?: Localized[];
   related?: string[];
+
+  // Filled by the admin API (absent on the built-in fallback content)
+  /** Rich-text case study body (sanitised HTML), per language. */
+  content?: Localized;
+  seo?: {
+    title?: { fr?: string | null; en?: string | null };
+    description?: { fr?: string | null; en?: string | null };
+  };
+  cover?: { url: string; alt: string; width: number | null; height: number | null } | null;
+  updatedAt?: string;
 }
 
 export const projects: Project[] = [
